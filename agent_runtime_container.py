@@ -12,10 +12,10 @@ memory = ConversationBufferMemory(memory_key="chat_history", return_messages=Tru
 # === LLM setup ===
 llm = ChatOpenAI(
     temperature=0.2,
-    api_key=os.environ["OPENAI_API_KEY"]
+    api_key=os.environ["OPENAI_API_KEY"]  # ✅ Must match .env or Railway var
 )
 
-# === Tool definition ===
+# === Tool: Generates mock response for autonomous agent logic ===
 def generate_agent_output(input: str) -> str:
     return f"[Autonomous Output Triggered] Role action initiated: {input}"
 
@@ -25,7 +25,7 @@ output_tool = Tool(
     description="Produces default output for the assigned role"
 )
 
-# === Agent definition ===
+# === Agent instance ===
 agent = initialize_agent(
     tools=[output_tool],
     llm=llm,
@@ -40,14 +40,14 @@ def run_agent_node(state):
     result = agent.run(input_text)
     return {"output": result}
 
-# === LangGraph Assembly ===
+# === LangGraph Runtime ===
 builder = StateGraph()
 builder.add_node("agent_node", run_agent_node)
 builder.set_entry_point("agent_node")
 builder.set_finish_point("agent_node")
 agent_graph = builder.compile()
 
-# === Local test run (optional) ===
+# === CLI Test Mode ===
 if __name__ == "__main__":
     user_input = "Write a sample contract for remix licensing."
     result = agent_graph.invoke({"input": user_input})
